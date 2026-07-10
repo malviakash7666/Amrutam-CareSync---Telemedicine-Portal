@@ -1,0 +1,417 @@
+openapi: 3.0.3
+info:
+  title: CareSync Telemedicine System API
+  description: Production-grade API specification for Amrutam's CareSync Telemedicine System.
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000/api
+    description: Local development server
+paths:
+  /users/signup:
+    post:
+      summary: Register a new user account
+      description: Signs up a PATIENT or DOCTOR and generates authentication cookie sessions.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - firstName
+                - lastName
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: patient@caresync.com
+                password:
+                  type: string
+                  format: password
+                  example: securepass123
+                role:
+                  type: string
+                  enum: [PATIENT, DOCTOR]
+                  default: PATIENT
+                firstName:
+                  type: string
+                  example: John
+                lastName:
+                  type: string
+                  example: Doe
+                phone:
+                  type: string
+                  example: "9988776655"
+      responses:
+        '201':
+          description: User created and session cookies injected.
+        '400':
+          description: Validation constraint failures.
+        '409':
+          description: Email matches an existing account.
+
+  /users/login:
+    post:
+      summary: Login credentials verification
+      description: Verifies credentials and injects HTTP-Only JWT cookies.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: patient@caresync.com
+                password:
+                  type: string
+                  format: password
+                  example: securepass123
+      responses:
+        '200':
+          description: Verification success.
+        '401':
+          description: Invalid email or password.
+
+  /users/logout:
+    post:
+      summary: Terminate session
+      description: Clears all authentication cookies.
+      responses:
+        '200':
+          description: Cookies cleared.
+
+  /users/me:
+    get:
+      summary: Decode active session profile details
+      responses:
+        '200':
+          description: Returns user profile.
+        '401':
+          description: Missing session token.
+
+  /doctors:
+    get:
+      summary: Search and filter verified doctors
+      parameters:
+        - name: specialization
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: feeMin
+          in: query
+          required: false
+          schema:
+            type: number
+        - name: feeMax
+          in: query
+          required: false
+          schema:
+            type: number
+        - name: experienceMin
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Array of verified doctors.
+
+  /doctors/{id}:
+    get:
+      summary: Get doctor detailed profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Doctor profile data.
+        '404':
+          description: Doctor profile not found.
+
+  /doctors/{id}/availability:
+    get:
+      summary: Get doctor active scheduling availability slots
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of available slots.
+
+  /doctors/availability:
+    post:
+      summary: Publish availability slots (Doctor Only)
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - slots
+              properties:
+                slots:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - startTime
+                      - endTime
+                    properties:
+                      startTime:
+                        type: string
+                        format: date-time
+                        example: "2026-07-12T10:00:00Z"
+                      endTime:
+                        type: string
+                        format: date-time
+                        example: "2026-07-12T11:00:00Z"
+      responses:
+        '201':
+          description: Slots published.
+        '409':
+          description: Slot overlaps with existing published times.
+
+  /consultations:
+    post:
+      summary: Book an appointment slot (Patient Only)
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - slotId
+              properties:
+                slotId:
+                  type: string
+                  format: uuid
+                  example: "68cc6b80-48a9-4e16-b030-ed5948c10452"
+                reasonForVisit:
+                  type: string
+                  example: "Mild fever and sore throat."
+      responses:
+        '201':
+          description: Slot locked and appointment scheduled.
+        '409':
+          description: Slot has already been booked by another transaction.
+    get:
+      summary: List consultations for active session (Patient/Doctor)
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Array of consultations.
+
+  /consultations/{id}/status:
+    post:
+      summary: Transition consultation status (Doctor Only)
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum: [IN_PROGRESS, COMPLETED, CANCELLED, NO_SHOW]
+      responses:
+        '200':
+          description: Status updated.
+
+  /prescriptions/consultations/{id}:
+    post:
+      summary: Issue digital signed prescription (Doctor Only)
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - items
+              properties:
+                notes:
+                  type: string
+                  example: "Take rest for 2 days."
+                items:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - drugName
+                      - dosage
+                      - frequency
+                      - duration
+                    properties:
+                      drugName:
+                        type: string
+                        example: "Amoxicillin 500mg"
+                      dosage:
+                        type: string
+                        example: "1 Tablet"
+                      frequency:
+                        type: string
+                        example: "Thrice daily"
+                      duration:
+                        type: string
+                        example: "5 Days"
+                      instructions:
+                        type: string
+                        example: "Take after meals"
+      responses:
+        '201':
+          description: Prescription issued and signed.
+
+  /prescriptions/{id}:
+    get:
+      summary: Fetch prescription details (Owner Only)
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Prescription items and digital signature.
+
+  /payments/checkout:
+    post:
+      summary: Pay pending invoice (Patient Only)
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - consultationId
+              properties:
+                consultationId:
+                  type: string
+                  format: uuid
+                  example: "68cc6b80-48a9-4e16-b030-ed5948c10452"
+                billingEmail:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: Checkout processed.
+
+  /payments/{id}/refund:
+    post:
+      summary: Refund payment (Admin Only)
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Payment refunded.
+
+  /admin/audit-logs:
+    get:
+      summary: Retrieve paginated compliance audit trail logs (Admin Only)
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: action
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: resourceType
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of audit trail entries.
+
+  /admin/analytics:
+    get:
+      summary: Get system analytics and financial revenue aggregates (Admin Only)
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Statistics summary.
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: accessToken

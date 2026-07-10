@@ -8,8 +8,26 @@ on:
 
 jobs:
   backend-validation:
-    name: Backend Security & Linting Checks
+    name: Backend Security, Linting & Integration Tests
     runs-on: ubuntu-latest
+    
+    # Spin up a PostgreSQL service container for full integration test execution
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: caresync_user
+          POSTGRES_PASSWORD: caresync_pass
+          POSTGRES_DB: caresync_db
+        ports:
+          - 5432:5432
+        # Health check options to ensure Postgres is fully ready before tests launch
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     defaults:
       run:
         working-directory: ./backend
@@ -18,10 +36,10 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Set up Node.js v22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
           cache-dependency-path: './backend/package-lock.json'
 
@@ -30,6 +48,15 @@ jobs:
 
       - name: Security Vulnerability Scan (npm audit)
         run: npm audit --audit-level=high || true
+
+      # Execute the complete integration test suite against the live test database
+      - name: Run Integration Test Suite
+        env:
+          NODE_ENV: test
+          DATABASE_URL: postgres://caresync_user:caresync_pass@localhost:5432/caresync_db
+          JWT_SECRET: testing_secret_jwt_key_2026
+          PRESCRIPTION_SECRET: testing_secret_prescription_signing_2026
+        run: npm test
 
   frontend-validation:
     name: Frontend Build & Compilation Checks
@@ -42,10 +69,10 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Set up Node.js v22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
           cache-dependency-path: './frontend/package-lock.json'
 

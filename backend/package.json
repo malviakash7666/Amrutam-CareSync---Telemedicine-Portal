@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
+    "test": "node --test tests/integration.test.js",
     "db:create": "sequelize-cli db:create",
     "db:drop": "sequelize-cli db:drop",
     "db:migrate": "sequelize-cli db:migrate",
