@@ -5,7 +5,7 @@ import { doctorService } from "../services/doctorService";
 import type { DoctorProfile } from "../services/doctorService";
 import DoctorCard from "../components/DoctorCard";
 import BookingModal from "../components/BookingModal";
-import { Search, MapPin, Filter } from "lucide-react";
+import { Search, Filter } from "lucide-react";
 
 const FindDoctors: React.FC = () => {
   const { user } = useAuth();

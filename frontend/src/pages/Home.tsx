@@ -1,5 +1,5 @@
 import React from "react";
-import { Activity, Shield, Calendar, CreditCard, Lock } from "lucide-react";
+import { Shield, Calendar, CreditCard, Lock } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 
 const Home: React.FC = () => {

@@ -1,8 +1,11 @@
 import dotenv from "dotenv";
 dotenv.config();
 
+const useEnvVariable = process.env.DATABASE_URL ? "DATABASE_URL" : undefined;
+
 export default {
   development: {
+    use_env_variable: useEnvVariable,
     username: process.env.DB_USERNAME,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
@@ -11,6 +14,7 @@ export default {
   },
 
   test: {
+    use_env_variable: useEnvVariable,
     username: process.env.DB_USERNAME,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_TEST_NAME,
@@ -19,6 +23,7 @@ export default {
   },
 
   production: {
+    use_env_variable: useEnvVariable,
     username: process.env.DB_USERNAME,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,

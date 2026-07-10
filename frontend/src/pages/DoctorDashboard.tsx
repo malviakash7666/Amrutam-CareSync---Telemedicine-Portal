@@ -4,7 +4,7 @@ import { consultationService } from "../services/consultationService";
 import type { Consultation } from "../services/consultationService";
 import { doctorService } from "../services/doctorService";
 import PrescriptionModal from "../components/PrescriptionModal";
-import { Calendar, Clock, Plus, Users, UserCheck, ShieldAlert, Award, FileSpreadsheet } from "lucide-react";
+import { Clock, Plus, Users, UserCheck, ShieldAlert, FileSpreadsheet } from "lucide-react";
 
 const DoctorDashboard: React.FC = () => {
   const toast = useToast();

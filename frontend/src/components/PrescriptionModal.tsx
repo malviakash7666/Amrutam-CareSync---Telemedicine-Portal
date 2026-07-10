@@ -3,7 +3,6 @@ import { X, FileText, Plus, Trash2, KeyRound, Check } from "lucide-react";
 import { prescriptionService } from "../services/prescriptionService";
 import type { Prescription, PrescriptionItemInput } from "../services/prescriptionService";
 import { useToast } from "../hooks/useToast";
-import { useAuth } from "../hooks/useAuth";
 
 interface PrescriptionModalProps {
   consultationId: string;
@@ -18,7 +17,6 @@ const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
   onClose,
   onSuccess,
 }) => {
-  const { user } = useAuth();
   const toast = useToast();
 
   const [prescription, setPrescription] = useState<Prescription | null>(null);

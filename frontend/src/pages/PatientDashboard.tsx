@@ -4,7 +4,7 @@ import { consultationService } from "../services/consultationService";
 import type { Consultation } from "../services/consultationService";
 import PaymentModal from "../components/PaymentModal";
 import PrescriptionModal from "../components/PrescriptionModal";
-import { Calendar, CreditCard, FileText, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
+import { Calendar, CreditCard, FileText, CheckCircle2 } from "lucide-react";
 
 const PatientDashboard: React.FC = () => {
   const toast = useToast();

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, Clock, Calendar } from "lucide-react";
+import { X, Clock } from "lucide-react";
 import { doctorService } from "../services/doctorService";
 import type { DoctorProfile, AvailabilitySlot } from "../services/doctorService";
 import { consultationService } from "../services/consultationService";

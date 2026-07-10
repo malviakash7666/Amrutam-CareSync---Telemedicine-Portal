@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useCallback, ReactNode } from "react";
+import React, { createContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import { userService } from "../services/userService";
 import type { UserProfile } from "../services/userService";
 
